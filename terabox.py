@@ -114,17 +114,14 @@ def get_data(url: str):
         "Accept": "application/json, text/plain, */*",
         "Accept-Language": "en-US,en;q=0.5",
         "Content-Type": "application/json",
-        "Origin": "https://ytshorts.savetube.me",
-        "Alt-Used": "ytshorts.savetube.me",
         "Sec-Fetch-Dest": "empty",
         "Sec-Fetch-Mode": "cors",
         "Sec-Fetch-Site": "same-origin",
     }
 
-    response = requests.post(
-        "https://ytshorts.savetube.me/api/v1/terabox-downloader",
+    response = requests.get(
+        "https://terabox-player.vercel.app/api/terabox?url="+url,",
         headers=headers,
-        json={"url": url},
     )
     if response.status_code != 200:
         return False
