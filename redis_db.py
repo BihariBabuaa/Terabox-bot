@@ -7,6 +7,18 @@ class Redis:
         self._cache = {}
         self.logger = log
 
+    def get(self, key):
+        return self._cache.get(key)
+
+    def set(self, key, value=None):
+        self._cache[key] = value
+        return value
+
+    def delete(self, key):
+        if key in self._cache:
+            del self._cache[key]
+        return True
+
     def get_key(self, key):
         return self._cache.get(key)
 
