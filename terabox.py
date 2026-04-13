@@ -99,66 +99,51 @@ def extract_surl_from_url(url: str) -> str | None:
 
 
 def get_data(url: str):
+    import re
     netloc = urlparse(url).netloc
     url = url.replace(netloc, "1024terabox.com")
-    response = requests.get(
-        url,
-        data="",
-    )
-    if not response.status_code == 200:
-        return False
-    default_thumbnail = find_between(response.text, 'og:image" content="', '"')
-
+    
+    # cookie config se lena
+    from config import COOKIE
+    
+    # ndus value nikalna cookie se
+    ndus = ""
+    match = re.search(r'ndus=([^;]+)', COOKIE)
+    if match:
+        ndus = match.group(1)
+    
     headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:126.0) Gecko/20100101 Firefox/126.0",
-        "Accept": "application/json, text/plain, */*",
-        "Accept-Language": "en-US,en;q=0.5",
         "Content-Type": "application/json",
-        "Sec-Fetch-Dest": "empty",
-        "Sec-Fetch-Mode": "cors",
-        "Sec-Fetch-Site": "same-origin",
+        "User-Agent": "Mozilla/5.0"
     }
-
-    response = requests.get(
-        "https://terabox-player.vercel.app/api/terabox?url=" + url,
+    
+    payload = {
+        "link": url,
+        "cookies": f"ndus={ndus}"
+    }
+    
+    response = requests.post(
+        "https://terasnap.netlify.app/api/download",
         headers=headers,
+        json=payload,
     )
+    
     if response.status_code != 200:
         return False
-    response = response.json()
-    responses = response.get("response", [])
-    if not responses:
-        return False
-    resolutions = responses[0].get("resolutions", [])
-    if not resolutions:
-        return False
-    download = resolutions.get("Fast Download", "")
-    video = resolutions.get("HD Video", "")
-
-    response = requests.request(
-        "HEAD",
-        video,
-        data="",
-    )
-    content_length = response.headers.get("Content-Length", 0)
-    if not content_length:
-        content_length = None
-    idk = response.headers.get("content-disposition")
-    if idk:
-        fname = re.findall('filename="(.+)"', idk)
-    else:
-        fname = None
-    response = requests.head(
-        download,
-    )
-
-    direct_link = response.headers.get("location")
-    data = {
-        "file_name": (fname[0] if fname else None),
-        "link": (video if video else None),
-        "direct_link": (direct_link if direct_link else download if list else None),
-        "thumb": (default_thumbnail if default_thumbnail else None),
-        "size": (get_formatted_size(int(content_length)) if content_length else None),
-        "sizebytes": (int(content_length) if content_length else None),
+    
+    data = response.json()
+    download = data.get("download_link", "")
+    video = data.get("download_link", "")
+    fname = data.get("file_name", None)
+    content_length = data.get("size_bytes", None)
+    direct_link = data.get("proxy_url", download)
+    default_thumbnail = data.get("thumbnail", "")
+    
+    return {
+        "file_name": fname,
+        "link": video,
+        "direct_link": direct_link,
+        "thumb": default_thumbnail,
+        "size": content_length,
+        "sizef": data.get("file_size", ""),
     }
-    return data
