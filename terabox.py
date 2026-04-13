@@ -120,7 +120,7 @@ def get_data(url: str):
     }
 
     response = requests.get(
-        "https://terabox-player.vercel.app/api/terabox?url="+url,",
+        "https://terabox-player.vercel.app/api/terabox?url=" + url,
         headers=headers,
     )
     if response.status_code != 200:
